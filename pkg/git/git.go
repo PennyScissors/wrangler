@@ -83,6 +83,7 @@ func (g *Git) LsRemote(branch string, commit string) (string, error) {
 
 // Head runs git clone on directory(if not exist), reset dirty content and return the HEAD commit
 func (g *Git) Head(branch string) (string, error) {
+	logrus.Info("** inside git Head **")
 	if err := g.clone(branch); err != nil {
 		return "", err
 	}
@@ -96,14 +97,16 @@ func (g *Git) Head(branch string) (string, error) {
 
 // Clone runs git clone with depth 1
 func (g *Git) Clone(branch string) error {
+	logrus.Info("** inside git Clone **")
 	if branch == "" {
-		return g.git("clone", "--depth=1", "-n", g.URL, g.Directory)
+		return g.git("clone", "-n", g.URL, g.Directory)
 	}
-	return g.git("clone", "--depth=1", "-n", "--branch", branch, g.URL, g.Directory)
+	return g.git("clone", "-n", "--branch", branch, g.URL, g.Directory)
 }
 
 // Update updates git repo if remote sha has changed
 func (g *Git) Update(branch string) (string, error) {
+	logrus.Info("** inside git Update **")
 	if err := g.clone(branch); err != nil {
 		return "", nil
 	}
@@ -317,6 +320,8 @@ func (g *Git) currentCommit() (string, error) {
 }
 
 func (g *Git) gitCmd(output io.Writer, args ...string) error {
+	logrus.Info("** Inside gitCmd **")
+	// spew.Dump(g)
 	kv := fmt.Sprintf("credential.helper=%s", "/bin/sh -c 'echo password=$GIT_PASSWORD'")
 	cmd := exec.Command("git", append([]string{"-c", kv}, args...)...)
 	cmd.Env = append(os.Environ(), fmt.Sprintf("GIT_PASSWORD=%s", g.password))
@@ -376,6 +381,8 @@ func (g *Git) gitCmd(output io.Writer, args ...string) error {
 
 	err := cmd.Run()
 	if err != nil {
+		logrus.Info("** inside cmd err **")
+		logrus.Infof("cmd: %s\n", cmd.String())
 		return fmt.Errorf("git %s error: %w, detail: %v", strings.Join(args, " "), err, stderrBuf.String())
 	}
 	return nil
